@@ -52,7 +52,7 @@ class ExampleChain(BaseChain):
             for message in data_messages
         ]
 
-        conversation = messages[:-1]
+        conversation = messages[:-1][-6:]
         last_message = messages[-1]
 
         return {"conversation": conversation, "input": last_message.content}

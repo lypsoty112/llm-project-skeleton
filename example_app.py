@@ -26,9 +26,7 @@ if prompt := st.chat_input("What is up?"):
     with st.chat_message("assistant"):
         response = chain.run(
             data=ExampleChainInput(
-                messages=[
-                    {"content": prompt, "role": "human"}
-                ]
+                messages=st.session_state.messages
             )
         ).response
         st.markdown(response)
