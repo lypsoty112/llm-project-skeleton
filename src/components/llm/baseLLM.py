@@ -1,30 +1,50 @@
+from abc import ABC, abstractmethod
+
 from langchain_core.language_models.base import BaseLanguageModel
 
 from src.components.base.baseComponent import BaseComponent
-from src.models.llm import LlmOutput
+from src.config import Config
+from src.models.llm.main import LlmBuildData, LlmChatData, LlmChatResponse, LlmRunData, LlmRunResponse
 
 
-class BaseLLM(BaseComponent):
-    def __init__(self, chat: bool = False, model_parameters: dict = None) -> None:
-        """
-        Constructs a BaseLLM object. This class is meant to be subclassed by all LLMs.
-        :param chat: Whether the LLM is a chat model or not. Not always an option.
-        :param model_parameters: The parameters to pass to the LLM.
-        """
-        super().__init__()
-        if model_parameters is None:
-            model_parameters = {}
+class BaseLlm(BaseComponent, ABC):
+    _llm: BaseLanguageModel
 
-        self.chat: bool = chat  # Whether the LLM is a chat model or not. Not always an option.
-        self.model_parameters: dict = model_parameters  # The parameters to pass to the LLM.
-        self.llm_name: str = "base-llm"  # The name of the LLM. Useful for debugging.
+    def __init__(self, config: Config = None) -> None:
+        super().__init__(config=config)
 
-    def build(self) -> BaseLanguageModel:
-        return BaseLanguageModel(
-            **self.model_parameters
-        )
+    @abstractmethod
+    def build(self, build_data: LlmBuildData | dict):
+        pass
 
-    def post_run(self, data: object) -> LlmOutput:
-        return LlmOutput(
-            completion=str(data),
-        )
+    @abstractmethod
+    def run(self, data: LlmRunData | dict) -> LlmRunResponse:
+        pass
+
+    @abstractmethod
+    async def run_async(self, data: LlmRunData | dict) -> LlmRunResponse:
+        pass
+
+    @abstractmethod
+    async def stream(self, data: LlmRunData | dict):
+        pass
+
+    @abstractmethod
+    def chat(self, data: LlmChatData | dict) -> LlmChatResponse:
+        pass
+
+    @abstractmethod
+    async def chat_async(self, data: LlmChatData | dict) -> LlmChatResponse:
+        pass
+
+    @abstractmethod
+    async def chat_stream(self, data: LlmChatData | dict):
+        pass
+
+    @property
+    def langchain_component(self) -> BaseLanguageModel:
+        return self._llm
+
+    def handle_history(self, history: LlmChatData | dict) -> str:
+        data = self.handle_input(history, LlmChatData)
+        return "\n".join(f"{message['role']}: '{message['content']}'" for message in data["history"])

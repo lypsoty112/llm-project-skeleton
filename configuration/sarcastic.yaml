@@ -1,0 +1,4 @@
+MAIN_CHAIN: "SarcasticChain"
+LOG_CONFIGS:
+  level: "INFO"
+  file: "sarcastic.log"

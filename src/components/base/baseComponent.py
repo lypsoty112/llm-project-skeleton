@@ -1,26 +1,44 @@
-class BaseComponent(object):
-    """
-    The base class for all components in the system. This class is meant to be subclassed by all components.
-    Each component and chain should subclass this class and implement the necessary methods.
-    """
+from abc import ABC, abstractmethod
+from typing import Type
 
-    def __init__(self):
+from loguru import logger
+from pydantic import BaseModel
+
+from src.config import Config
+
+
+class BaseComponent(ABC):
+    config: Config
+
+    def __init__(self, config: Config = None) -> None:
+        super().__init__()
+        self.config = config
+        if config is None:
+            logger.warning("No config provided, using default config")
+            self.config = Config()
+
+    @abstractmethod
+    def build(self, build_data: Type[BaseModel] | dict):
         pass
 
-    def build(self) -> object | None:
-        """
-        Builds the component internally. This method should be called before running the component.
-        Components return a 'langchain' object that is used to run the component in the chain.
-        When building this kind of component, the 'langchain' object should be returned & stored in the chain as a
-        variable. Chains don't return anything, instead they store the chain in a class variable.
-        :return: The built component or None if the component is a chain
-        """
-        return None
+    @abstractmethod
+    def run(self, data: Type[BaseModel] | dict) -> BaseModel:
+        pass
 
-    def post_run(self, data: object) -> object:
-        """
-        Post-processes the data after running the component or chain.
-        :param data: The data to post-process
-        :return: The post-processed data in the correct format
-        """
-        return data
+    @abstractmethod
+    async def run_async(self, data: Type[BaseModel] | dict) -> BaseModel:
+        pass
+
+    @staticmethod
+    def handle_input(data: Type[BaseModel] | dict, expected: Type[BaseModel]) -> dict:
+        if isinstance(data, dict):
+            data = expected(**data)
+        return data.model_dump()
+
+    @staticmethod
+    def handle_output(data: dict, expected: Type[BaseModel]) -> BaseModel:
+        return expected(**data)
+
+    @property
+    def langchain_component(self) -> any:
+        return None

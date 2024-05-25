@@ -30,5 +30,3 @@ The `BaseChain` class is the base class for all chains. It includes the followin
 6. Additional components, such as tools, processors, metadata, and others, can also be added.
 7. A chain can have different chains to call, allowing multiple chains to be executed within a single chain.
 8. Chains offer a lot of possibilities, so it's essential to keep the code clean and modular.
-
----
